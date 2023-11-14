@@ -20,106 +20,109 @@ import {
 const Customizer = () => {
   const snap = useSnapshot(state);
 
-  const [file, setFile] = useState('')
-  const [prompt, setPrompt] = useState('')
-  const [generatingImg, setGeneratingImg] = useState(false)
+  const [file, setFile] = useState("");
 
-  const [activeEditorTab, setActiveEditorTab] = useState('')
+  const [prompt, setPrompt] = useState("");
+  const [generatingImg, setGeneratingImg] = useState(false);
+
+  const [activeEditorTab, setActiveEditorTab] = useState("");
   const [activeFilterTab, setActiveFilterTab] = useState({
     logoShirt: true,
-    stylishShirt: false
-  })
+    stylishShirt: false,
+  });
 
-//   show tab content depending on active tab
-const generateTabContent = () => {
+  //   show tab content depending on active tab
+  const generateTabContent = () => {
     switch (activeEditorTab) {
-        case "colorpicker":
-            return <ColorPicker />
-        case "filepicker":
-            return <FilePicker 
-                file={file}
-                setFile={setFile}
-                readFile={readFile}
-            />
-        case "aipicker":
-            return <AIPicker
-            prompt={prompt} 
+      case "colorpicker":
+        return <ColorPicker />;
+      case "filepicker":
+        return <FilePicker file={file} setFile={setFile} readFile={readFile} />;
+      case "aipicker":
+        return (
+          <AIPicker
+            prompt={prompt}
             setPrompt={setPrompt}
             generatingImg={generatingImg}
             handleSubmit={handleSubmit}
-            />
-        default:
-            return null
+          />
+        );
+      default:
+        return null;
     }
-}
+  };
 
-const handleSubmit = async (type) => {
-    if(!prompt) return alert("Please enter a prompt")
-    
-    try{
-        // call backend 
-        setGeneratingImg(true)
-        
-        const response = await fetch('https://threejs-project-q61b.onrender.com/api/v1/dalle', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                prompt,
-            })
-        })
+  const handleSubmit = async (type) => {
+    if (!prompt) return alert("Please enter a prompt");
 
-        const data = await response.json()
+    try {
+      // call backend
+      setGeneratingImg(true);
 
-        handleDecals(type, `data:image/png;base64,${data.photo}`)
+      const response = await fetch(
+        "https://threejs-project-q61b.onrender.com/api/v1/dalle",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            prompt,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      handleDecals(type, `data:image/png;base64,${data.photo}`);
     } catch (error) {
-        alert(error)
+      alert(error);
     } finally {
-        setGeneratingImg(false)
-        setActiveEditorTab("")
+      setGeneratingImg(false);
+      setActiveEditorTab("");
     }
-}
+  };
 
-const handleDecals = (type, result) => {
-    const decalType = DecalTypes[type]
+  const handleDecals = (type, result) => {
+    const decalType = DecalTypes[type];
 
-    state[decalType.stateProperty] = result
-    if(!activeFilterTab[decalType.filterTab]) {
-        handleActiveFilterTab(decalType.filterTab)
+    state[decalType.stateProperty] = result;
+
+    if (!activeFilterTab[decalType.filterTab]) {
+      handleActiveFilterTab(decalType.filterTab);
     }
-}
+  };
 
-const handleActiveFilterTab = (tabName) => {
+  const handleActiveFilterTab = (tabName) => {
     switch (tabName) {
-        case "logoShirt":
-            state.isLogoTexture = !activeFilterTab[tabName]
-            break;
-        case "stylishShirt":
-            state.isFullTexture = !activeFilterTab[tabName]
-            break;
-        default:
-            state.isLogoTexture = true
-            state.isFullTexture = false
+      case "logoShirt":
+        state.isLogoTexture = !activeFilterTab[tabName];
+        break;
+      case "stylishShirt":
+        state.isFullTexture = !activeFilterTab[tabName];
+        break;
+      default:
+        state.isLogoTexture = true;
+        state.isFullTexture = false;
+        break;
     }
 
     // after setting state, activeFilterTab update ui
 
     setActiveFilterTab((prevState) => {
-        return {
-            ...prevState,
-            [tabName]: !prevState[tabName]
-        }
-    })
-}
+      return {
+        ...prevState,
+        [tabName]: !prevState[tabName],
+      };
+    });
+  };
 
-const readFile = (type) => {
-    reader(file)
-    .then((result) => {
-        handleDecals(type, result)
-        setActiveEditorTab("")
-    })
-}
+  const readFile = (type) => {
+    reader(file).then((result) => {
+      handleDecals(type, result);
+      setActiveEditorTab("");
+    });
+  };
 
   return (
     <AnimatePresence>
@@ -133,7 +136,11 @@ const readFile = (type) => {
             <div className="flex items-center min-h-screen">
               <div className="editortabs-container tabs">
                 {EditorTabs.map((tab) => (
-                  <Tab key={tab.name} tab={tab} handleClick={() => setActiveEditorTab(tab.name)} />
+                  <Tab
+                    key={tab.name}
+                    tab={tab}
+                    handleClick={() => setActiveEditorTab(tab.name)}
+                  />
                 ))}
 
                 {generateTabContent()}
@@ -166,6 +173,14 @@ const readFile = (type) => {
                 handleClick={() => handleActiveFilterTab(tab.name)}
               />
             ))}
+            {/* Download button */}
+            <button className='download-btn' onClick={downloadCanvasToImage}>
+              <img
+                src={download}
+                alt='download_image'
+                className='w-3/5 h-3/5 object-contain'
+              />
+            </button>
           </motion.div>
         </>
       )}
